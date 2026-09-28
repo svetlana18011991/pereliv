@@ -249,8 +249,13 @@ function sfxOutput(ctx){const comp=ctx.createDynamicsCompressor(),master=ctx.cre
 function playPourSfx(kind){const style=kind==='target'?targetPourSoundKey():pourSoundKey();if(style==='none')return;const ctx=sfxCtx();if(!ctx)return;const now=ctx.currentTime+.015,master=sfxOutput(ctx);const bubble=(t,a,b,amp,d)=>sfxBubble(ctx,master,t,a,b,amp,d),plop=(t,a,b,amp,d)=>sfxPlop(ctx,master,t,a,b,amp,d),tone=(t,a,b,amp,d,type)=>sfxLiquidTone(ctx,master,t,a,b,amp,d,type);
  if(kind==='tube'){
    if(style==='stream'){
-     tone(now,145,112,.050,.54,'sine');tone(now+.035,305,245,.018,.42,'triangle');
-     [0,.075,.145,.225,.305,.385].forEach((dt,i)=>plop(now+.045+dt,220+i*12,145+i*9,.072-i*.004,.105+i*.006));
+     const drops=[
+       [0.000,235,128,.060,.105],[0.052,198,112,.048,.090],[0.111,264,142,.054,.098],
+       [0.173,184,104,.046,.090],[0.244,224,121,.057,.102],[0.318,205,110,.049,.094],
+       [0.402,252,136,.052,.100],[0.488,190,102,.044,.088]
+     ];
+     drops.forEach(([dt,a,b,amp,d])=>plop(now+.025+dt,a,b,amp,d));
+     bubble(now+.135,118,202,.036,.095);bubble(now+.362,110,188,.038,.102);
    }else if(style==='bubbles'){
      tone(now,92,66,.054,.62,'sine');
      [0,.045,.105,.175,.235,.315,.37,.445,.51].forEach((dt,i)=>bubble(now+.035+dt,125+(i%3)*38,245+(i%4)*42,.070+(i%2)*.015,.095+(i%3)*.018));
@@ -266,9 +271,12 @@ function playPourSfx(kind){const style=kind==='target'?targetPourSoundKey():pour
      [0,.11,.235,.36,.49].forEach((dt,i)=>plop(now+.055+dt,94-(i%2)*12,56-(i%2)*7,.095+i*.004,.18));
      bubble(now+.25,82,145,.065,.16);bubble(now+.56,76,132,.070,.17);
    }else if(style==='elixir'){
-     tone(now,116,82,.060,.76,'sine');tone(now+.06,238,190,.022,.57,'triangle');
-     [0,.09,.19,.30,.41,.53].forEach((dt,i)=>bubble(now+.055+dt,125+(i%3)*25,225+(i%3)*35,.066+(i%2)*.009,.13));
-     plop(now+.22,150,92,.075,.18);plop(now+.50,135,84,.080,.19);
+     const gurgles=[
+       [0.000,92,154,.074,.155],[0.105,118,205,.058,.125],[0.218,84,142,.082,.170],
+       [0.350,106,188,.062,.135],[0.482,78,132,.086,.180],[0.610,98,172,.060,.135]
+     ];
+     gurgles.forEach(([dt,a,b,amp,d])=>bubble(now+.035+dt,a,b,amp,d));
+     plop(now+.185,126,72,.070,.165);plop(now+.445,112,64,.078,.180);plop(now+.680,102,58,.068,.165);
    }else{
      plop(now,185,82,.120,.23);tone(now+.015,104,72,.060,.58,'sine');
      [0,.065,.15,.245,.345].forEach((dt,i)=>plop(now+.11+dt,330-(i%2)*70,175-(i%2)*35,.065-i*.003,.115));
