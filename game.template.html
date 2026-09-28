@@ -242,17 +242,38 @@ function pourSoundKey(){let v=String(state.cfg?.pourSound||'stream');if(v==='gla
 function targetPourSoundKey(){const v=String(state.cfg?.targetPourSound||'elixir');return ['none','deep','elixir','splash'].includes(v)?v:'elixir'}
 let SFX_CONTEXT=null;
 function sfxCtx(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!SFX_CONTEXT)SFX_CONTEXT=new C();if(SFX_CONTEXT.state==='suspended')SFX_CONTEXT.resume().catch(()=>{});return SFX_CONTEXT}
-function sfxBubble(ctx,out,t,f0,f1,amp=.05,d=.11){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(Math.max(30,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+.018);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(out);o.start(t);o.stop(t+d+.025)}
-function sfxLiquidTone(ctx,out,t,f0,f1,amp=.018,d=.30,type='sine'){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(Math.max(30,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+d);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+.045);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(out);o.start(t);o.stop(t+d+.03)}
-function playPourSfx(kind){const style=kind==='target'?targetPourSoundKey():pourSoundKey();if(style==='none')return;const ctx=sfxCtx();if(!ctx)return;const now=ctx.currentTime+.015,master=ctx.createGain();master.gain.value=.44;master.connect(ctx.destination);const bubble=(t,a,b,amp,d)=>sfxBubble(ctx,master,t,a,b,amp,d),tone=(t,a,b,amp,d,type)=>sfxLiquidTone(ctx,master,t,a,b,amp,d,type);
+function sfxBubble(ctx,out,t,f0,f1,amp=.08,d=.12){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(Math.max(35,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(35,f1),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+.014);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(out);o.start(t);o.stop(t+d+.025)}
+function sfxPlop(ctx,out,t,f0,f1,amp=.09,d=.15){const o=ctx.createOscillator(),g=ctx.createGain(),o2=ctx.createOscillator(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.setValueAtTime(Math.max(35,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(35,f1),t+d);o2.frequency.setValueAtTime(Math.max(60,f0*1.9),t);o2.frequency.exponentialRampToValueAtTime(Math.max(60,f1*1.45),t+d*.78);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);g2.gain.setValueAtTime(.0001,t);g2.gain.exponentialRampToValueAtTime(amp*.20,t+.010);g2.gain.exponentialRampToValueAtTime(.0001,t+d*.75);o.connect(g).connect(out);o2.connect(g2).connect(out);o.start(t);o2.start(t);o.stop(t+d+.025);o2.stop(t+d+.025)}
+function sfxLiquidTone(ctx,out,t,f0,f1,amp=.035,d=.35,type='sine'){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(Math.max(35,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(35,f1),t+d);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+.045);g.gain.setValueAtTime(amp*.92,t+d*.62);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(out);o.start(t);o.stop(t+d+.03)}
+function sfxOutput(ctx){const comp=ctx.createDynamicsCompressor(),master=ctx.createGain();comp.threshold.value=-24;comp.knee.value=18;comp.ratio.value=3.2;comp.attack.value=.006;comp.release.value=.16;master.gain.value=.78;master.connect(comp).connect(ctx.destination);return master}
+function playPourSfx(kind){const style=kind==='target'?targetPourSoundKey():pourSoundKey();if(style==='none')return;const ctx=sfxCtx();if(!ctx)return;const now=ctx.currentTime+.015,master=sfxOutput(ctx);const bubble=(t,a,b,amp,d)=>sfxBubble(ctx,master,t,a,b,amp,d),plop=(t,a,b,amp,d)=>sfxPlop(ctx,master,t,a,b,amp,d),tone=(t,a,b,amp,d,type)=>sfxLiquidTone(ctx,master,t,a,b,amp,d,type);
  if(kind==='tube'){
-   if(style==='stream'){tone(now,118,92,.018,.48,'sine');for(let i=0;i<6;i++)bubble(now+.07+i*.075+(Math.random()-.5)*.018,175+Math.random()*45,280+Math.random()*55,.032+Math.random()*.012,.09+Math.random()*.035)}
-   else if(style==='bubbles'){tone(now,105,82,.014,.52,'sine');for(let i=0;i<9;i++)bubble(now+.045+i*.058+(Math.random()-.5)*.025,155+Math.random()*110,275+Math.random()*125,.035+Math.random()*.018,.08+Math.random()*.045)}
-   else {tone(now,126,96,.017,.55,'sine');for(let i=0;i<7;i++)bubble(now+.06+i*.072+(Math.random()-.5)*.02,135+Math.random()*75,225+Math.random()*90,.028+Math.random()*.012,.11+Math.random()*.035)}
+   if(style==='stream'){
+     tone(now,145,112,.050,.54,'sine');tone(now+.035,305,245,.018,.42,'triangle');
+     [0,.075,.145,.225,.305,.385].forEach((dt,i)=>plop(now+.045+dt,220+i*12,145+i*9,.072-i*.004,.105+i*.006));
+   }else if(style==='bubbles'){
+     tone(now,92,66,.054,.62,'sine');
+     [0,.045,.105,.175,.235,.315,.37,.445,.51].forEach((dt,i)=>bubble(now+.035+dt,125+(i%3)*38,245+(i%4)*42,.070+(i%2)*.015,.095+(i%3)*.018));
+     plop(now+.18,118,78,.075,.18);plop(now+.43,106,72,.080,.19);
+   }else{
+     tone(now,168,128,.038,.58,'sine');
+     [0,.105,.205,.315,.425].forEach((dt,i)=>plop(now+.04+dt,310-(i%2)*55,170-(i%2)*22,.080,.125));
+     bubble(now+.16,180,325,.052,.105);bubble(now+.37,165,300,.055,.11);
+   }
  }else{
-   if(style==='deep'){tone(now,78,58,.026,.68,'sine');for(let i=0;i<7;i++)bubble(now+.08+i*.088+(Math.random()-.5)*.025,72+Math.random()*42,122+Math.random()*55,.046+Math.random()*.020,.14+Math.random()*.055)}
-   else if(style==='elixir'){tone(now,112,82,.020,.70,'sine');tone(now+.08,178,142,.010,.52,'triangle');for(let i=0;i<7;i++)bubble(now+.075+i*.082+(Math.random()-.5)*.02,105+Math.random()*75,185+Math.random()*95,.034+Math.random()*.014,.12+Math.random()*.045)}
-   else {tone(now,92,68,.024,.62,'sine');for(let i=0;i<6;i++)bubble(now+.055+i*.085+(Math.random()-.5)*.024,88+Math.random()*72,165+Math.random()*85,.042+Math.random()*.018,.12+Math.random()*.05)}
+   if(style==='deep'){
+     tone(now,72,50,.075,.78,'sine');tone(now+.05,112,78,.032,.62,'sine');
+     [0,.11,.235,.36,.49].forEach((dt,i)=>plop(now+.055+dt,94-(i%2)*12,56-(i%2)*7,.095+i*.004,.18));
+     bubble(now+.25,82,145,.065,.16);bubble(now+.56,76,132,.070,.17);
+   }else if(style==='elixir'){
+     tone(now,116,82,.060,.76,'sine');tone(now+.06,238,190,.022,.57,'triangle');
+     [0,.09,.19,.30,.41,.53].forEach((dt,i)=>bubble(now+.055+dt,125+(i%3)*25,225+(i%3)*35,.066+(i%2)*.009,.13));
+     plop(now+.22,150,92,.075,.18);plop(now+.50,135,84,.080,.19);
+   }else{
+     plop(now,185,82,.120,.23);tone(now+.015,104,72,.060,.58,'sine');
+     [0,.065,.15,.245,.345].forEach((dt,i)=>plop(now+.11+dt,330-(i%2)*70,175-(i%2)*35,.065-i*.003,.115));
+     bubble(now+.25,140,285,.050,.11);bubble(now+.43,125,250,.045,.105);
+   }
  }}
 window.addEventListener('pointerdown',()=>{const c=sfxCtx();if(c&&c.state==='suspended')c.resume().catch(()=>{})},{passive:true});
 const MAGIC_SHIMMER_PROFILES={
